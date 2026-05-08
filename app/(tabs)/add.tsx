@@ -106,7 +106,7 @@ export default function AddScreen() {
     }
     setLocating(true);
     try {
-      const pos = await Location.getCurrentPositionAsync({});
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const geo = await Location.reverseGeocodeAsync({
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
@@ -117,6 +117,8 @@ export default function AddScreen() {
         setValue('city', geo[0].city ?? '');
         setValue('country', geo[0].country ?? '');
       }
+    } catch {
+      Alert.alert('Error de GPS', 'No se pudo obtener la ubicación del dispositivo.');
     } finally {
       setLocating(false);
     }
