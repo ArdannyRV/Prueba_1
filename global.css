@@ -1,3 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'uniwind';
+
+@theme {
+  --color-dominos-red: #E31837;
+  --color-dominos-blue: #0055A5;
+}
