@@ -30,7 +30,7 @@ export function DishCard({ dish, onDelete }: DishCardProps) {
   return (
     <GestureDetector gesture={panGesture}>
       <Animated.View
-        entering={FadeInDown}
+        entering={FadeInDown.duration(1000)}
         exiting={FadeOutLeft}
         style={animatedStyle}
         className="bg-white rounded-xl mb-3 mx-4 shadow-sm border border-gray-200 overflow-hidden"

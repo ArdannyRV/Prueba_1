@@ -97,13 +97,20 @@ export default function AddScreen() {
     }
   };
 
-  const handleGPS = async () => {
+  const onSubmit = async (data: AddForm) => {
+    if (!userId) return;
+    if (!data.name || !data.photo_uri) {
+      Alert.alert('Campos incompletos', 'Completa el nombre y la foto del plato.');
+      return;
+    }
+
     if (locating) return;
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permiso requerido', 'Se necesita acceso a la ubicación para registrar el lugar.');
       return;
     }
+
     setLocating(true);
     try {
       let pos = await Location.getLastKnownPositionAsync({});
@@ -117,42 +124,30 @@ export default function AddScreen() {
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
       });
-      setValue('latitude', pos.coords.latitude);
-      setValue('longitude', pos.coords.longitude);
-      if (geo[0]) {
-        setValue('city', geo[0].city ?? '');
-        setValue('country', geo[0].country ?? '');
-      }
+
+      const dish: Dish = {
+        id: Date.now().toString(),
+        user_id: userId,
+        name: data.name,
+        photo_uri: data.photo_uri,
+        city: geo[0]?.city ?? '',
+        country: geo[0]?.country ?? '',
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        created_at: new Date().toISOString(),
+      };
+
+      addDishMutation.mutate(dish, {
+        onSuccess: () => {
+          reset();
+          router.replace('/');
+        },
+      });
     } catch (error: any) {
       Alert.alert('Error de GPS', error.message || 'No se pudo obtener la ubicación.');
     } finally {
       setLocating(false);
     }
-  };
-
-  const onSubmit = async (data: AddForm) => {
-    if (!userId) return;
-    if (!data.name || !data.photo_uri || data.latitude == null) {
-      Alert.alert('Campos incompletos', 'Completa todos los campos requeridos.');
-      return;
-    }
-    const dish: Dish = {
-      id: Date.now().toString(),
-      user_id: userId,
-      name: data.name,
-      photo_uri: data.photo_uri,
-      city: data.city ?? '',
-      country: data.country ?? '',
-      latitude: data.latitude,
-      longitude: data.longitude ?? 0,
-      created_at: new Date().toISOString(),
-    };
-    addDishMutation.mutate(dish, {
-      onSuccess: () => {
-        reset();
-        router.replace('/');
-      },
-    });
   };
 
   return (
@@ -207,22 +202,12 @@ export default function AddScreen() {
           )}
           {pickingImage && <Text className="text-gray-500 text-center mb-2">Seleccionando imagen…</Text>}
 
-          <TouchableOpacity
-            className="rounded-lg p-3 items-center mb-1"
-            style={{ backgroundColor: Colors.dominosBlue }}
-            onPress={handleGPS}
-          >
-            <Text className="text-white font-semibold">{locating ? 'Obteniendo ubicación…' : 'Obtener ubicación'}</Text>
-          </TouchableOpacity>
-          {city && (
-            <Text className="text-gray-700 mb-2">Ubicación: {city}{country ? `, ${country}` : ''}</Text>
-          )}
         </ScrollView>
         <View className="mb-6 items-center">
           <AnimatedButton
-            title={addDishMutation.isPending ? 'Guardando…' : 'Registrar'}
+            title={(locating || addDishMutation.isPending) ? 'Localizando y guardando...' : 'Registrar'}
             onPress={handleSubmit(onSubmit)}
-            disabled={addDishMutation.isPending}
+            disabled={locating || addDishMutation.isPending}
             className="w-2/3 self-center"
           />
         </View>
