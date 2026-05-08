@@ -1,132 +1,100 @@
-import { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { supabase } from '../../lib/supabase';
-import { Colors } from '../../constants/theme';
-
-interface RegisterForm {
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-
-  const { control, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>({
-    defaultValues: { email: '', password: '', confirmPassword: '' },
+  const { control, handleSubmit } = useForm({
+    defaultValues: { email: '', password: '', confirmPassword: '' }
   });
 
-  const password = watch('password');
-
-  const onSubmit = async (data: RegisterForm) => {
+  const onRegister = async (data: any) => {
     if (data.password !== data.confirmPassword) {
+      alert("Las contraseñas no coinciden");
       return;
     }
-    setError(null);
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
     });
-    if (error) {
-      setError(error.message);
-    }
+    if (error) alert(error.message);
+    else alert("¡Registro exitoso! Revisa tu correo.");
   };
 
   return (
-    <View className="flex-1 bg-white justify-center p-6">
-      <Text className="text-3xl font-bold text-center mb-8" style={{ color: Colors.dominosRed }}>
-        Crear Cuenta
-      </Text>
-
-      {error && (
-        <Text className="text-red-600 text-center mb-4">{error}</Text>
-      )}
-
-      <Controller
-        control={control}
-        name="email"
-        rules={{ required: 'El correo es obligatorio' }}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-3 mb-1 text-base"
-              placeholder="Correo electrónico"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-            {errors.email && (
-              <Text className="text-red-600 mb-2">{errors.email.message}</Text>
+    <ImageBackground 
+      source={require('../../assets/images/mesa_login_registro.jpg')} 
+      className="flex-1" 
+      resizeMode="cover"
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-black/40">
+        <View className="flex-1 justify-center p-8">
+          {/* Título solo en blanco */}
+          <Text className="text-4xl font-black text-white text-center mb-12">
+            Crear Cuenta
+          </Text>
+          
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                className="bg-white/90 p-4 rounded-xl mb-4 text-base"
+                placeholder="Correo electrónico"
+                placeholderTextColor="#666"
+                onChangeText={onChange}
+                value={value}
+              />
             )}
-          </>
-        )}
-      />
+          />
 
-      <Controller
-        control={control}
-        name="password"
-        rules={{ required: 'La contraseña es obligatoria' }}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-3 mb-1 text-base"
-              placeholder="Contraseña"
-              secureTextEntry
-              autoCapitalize="none"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-            {errors.password && (
-              <Text className="text-red-600 mb-2">{errors.password.message}</Text>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                className="bg-white/90 p-4 rounded-xl mb-4 text-base"
+                placeholder="Contraseña"
+                placeholderTextColor="#666"
+                secureTextEntry
+                onChangeText={onChange}
+                value={value}
+              />
             )}
-          </>
-        )}
-      />
+          />
 
-      <Controller
-        control={control}
-        name="confirmPassword"
-        rules={{
-          required: 'Confirma tu contraseña',
-          validate: (value) => value === password || 'Las contraseñas no coinciden',
-        }}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <>
-            <TextInput
-              className="border border-gray-300 rounded-lg p-3 mb-1 text-base"
-              placeholder="Confirmar contraseña"
-              secureTextEntry
-              autoCapitalize="none"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-            {errors.confirmPassword && (
-              <Text className="text-red-600 mb-2">{errors.confirmPassword.message}</Text>
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                className="bg-white/90 p-4 rounded-xl mb-8 text-base"
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="#666"
+                secureTextEntry
+                onChangeText={onChange}
+                value={value}
+              />
             )}
-          </>
-        )}
-      />
+          />
 
-      <TouchableOpacity
-        className="rounded-lg p-3 mt-4 items-center"
-        style={{ backgroundColor: Colors.dominosRed }}
-        onPress={handleSubmit(onSubmit)}
-      >
-        <Text className="text-white font-semibold text-base">Registrarse</Text>
-      </TouchableOpacity>
+          {/* Botón de Registro en Rojo Domino's para destacar la acción principal */}
+          <TouchableOpacity 
+            className="bg-[#E31837] p-4 rounded-xl items-center mb-6 shadow-lg"
+            onPress={handleSubmit(onRegister)}
+          >
+            <Text className="text-white font-bold text-lg">Registrarse</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity className="mt-4 items-center" onPress={() => router.replace('/login')}>
-        <Text className="text-base" style={{ color: Colors.dominosBlue }}>
-          ¿Ya tienes cuenta? Inicia sesión
-        </Text>
-      </TouchableOpacity>
-    </View>
+          {/* Enlace solo texto blanco */}
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text className="text-white text-center font-semibold text-base">
+              Ya tengo cuenta, ir al Login
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 }
