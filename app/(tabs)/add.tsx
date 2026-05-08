@@ -137,6 +137,8 @@ export default function AddScreen() {
         created_at: new Date().toISOString(),
       };
 
+      console.log('🚀 [NUEVO PLATO REGISTRADO]:', JSON.stringify(dish, null, 2));
+
       addDishMutation.mutate(dish, {
         onSuccess: () => {
           reset();
