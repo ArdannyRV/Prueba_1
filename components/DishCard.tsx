@@ -48,6 +48,16 @@ export function DishCard({ dish, onDelete }: DishCardProps) {
             <Text className="text-sm text-gray-600 mt-1">
               {dish.city}{dish.country ? `, ${dish.country}` : ''}
             </Text>
+            {dish.latitude != null && dish.longitude != null && (
+              <Text className="text-[10px] text-gray-500 mt-1">
+                lat: {dish.latitude}, long: {dish.longitude}
+              </Text>
+            )}
+            {dish.created_at && (
+              <Text className="text-[10px] text-gray-500 mt-1">
+                {new Date(dish.created_at).toLocaleDateString()}
+              </Text>
+            )}
           </View>
         </View>
       </Animated.View>
