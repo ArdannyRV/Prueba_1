@@ -16,9 +16,11 @@ export function AnimatedButton({ title, onPress, className = '', disabled }: Ani
   }));
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View
+      style={animatedStyle}
+      className={`bg-[#E31837] p-2 rounded-xl items-center justify-center min-h-[44px] ${disabled ? 'opacity-50' : ''} ${className}`}
+    >
       <Pressable
-        className={`rounded-lg p-4 items-center ${className}`}
         disabled={disabled}
         onPress={onPress}
         onPressIn={() => { scale.value = withSpring(0.95); }}

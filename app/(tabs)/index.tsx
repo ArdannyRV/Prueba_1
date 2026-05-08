@@ -1,4 +1,4 @@
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, ImageBackground, Text, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDishes } from '../../hooks/useDishes';
 import { DishCard } from '../../components/DishCard';
@@ -24,23 +24,31 @@ export default function HomeScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <ImageBackground source={require('../../assets/images/mesa.jpg')} className="flex-1" resizeMode="cover">
       {dishesQuery.data?.length === 0 ? (
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-2xl font-bold mb-2" style={{ color: Colors.dominosRed }}>
-            Bienvenido
-          </Text>
-          <Text className="text-base text-gray-600 mb-8 text-center">
-            Aún no has registrado ningún plato.
-          </Text>
-          <AnimatedButton
-            title="Cerrar Sesión"
-            onPress={handleLogout}
-            className="px-6"
-          />
+        <View className="flex-1 bg-white/85">
+          <View className="bg-[#E31837] pt-14 pb-6 px-4 rounded-b-3xl shadow-xl mb-4">
+            <Text className="text-4xl font-black text-white text-center">Platos</Text>
+          </View>
+          <View className="flex-1 justify-center items-center px-6">
+            <Text className="text-2xl font-bold mb-2" style={{ color: Colors.dominosRed }}>
+              Bienvenido
+            </Text>
+            <Text className="text-base text-gray-600 mb-8 text-center">
+              Aún no has registrado ningún plato.
+            </Text>
+            <AnimatedButton
+              title="Cerrar Sesión"
+              onPress={handleLogout}
+              className="bg-[#0055A5] p-2 w-2/3 self-center rounded-xl mb-6"
+            />
+          </View>
         </View>
       ) : (
-        <>
+        <View className="flex-1 bg-white/85">
+          <View className="bg-[#E31837] pt-14 pb-6 px-4 rounded-b-3xl shadow-xl mb-4">
+            <Text className="text-4xl font-black text-white text-center">Platos</Text>
+          </View>
           <FlatList
             data={dishesQuery.data}
             keyExtractor={(item) => item.id}
@@ -50,17 +58,19 @@ export default function HomeScreen() {
                 onDelete={(id) => deleteDishMutation.mutate(id)}
               />
             )}
-            contentContainerClassName="pt-4 pb-4"
+            contentContainerClassName="pb-4"
             showsVerticalScrollIndicator={false}
+            className="flex-1"
           />
-          <View className="px-4 pb-6">
+          <View className="mb-6 items-center">
             <AnimatedButton
               title="Cerrar Sesión"
               onPress={handleLogout}
+              className="bg-[#0055A5] p-2 w-2/3 self-center rounded-xl"
             />
           </View>
-        </>
+        </View>
       )}
-    </View>
+    </ImageBackground>
   );
 }
