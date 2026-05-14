@@ -1,4 +1,5 @@
 import { Image, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeOutLeft, runOnJS, useSharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Dish } from '../types/dish';
@@ -11,6 +12,10 @@ interface DishCardProps {
 
 export function DishCard({ dish, onDelete }: DishCardProps) {
   const translateX = useSharedValue(0);
+
+  const handlePress = () => {
+    router.push(`/dish/${dish.id}`);
+  };
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -25,12 +30,17 @@ export function DishCard({ dish, onDelete }: DishCardProps) {
       translateX.value = 0;
     });
 
+  const tapGesture = Gesture.Tap().onEnd(() => {
+    runOnJS(handlePress)();
+  });
+
+  const composedGesture = Gesture.Race(panGesture, tapGesture);
   const animatedStyle = { transform: [{ translateX }] };
 
   return (
-    <GestureDetector gesture={panGesture}>
+    <GestureDetector gesture={composedGesture}>
       <Animated.View
-        entering={FadeInDown.duration(1000)}
+        entering={FadeInDown.duration(4000)}
         exiting={FadeOutLeft}
         style={animatedStyle}
         className="bg-white rounded-xl mb-3 mx-4 shadow-sm border border-gray-200 overflow-hidden"
