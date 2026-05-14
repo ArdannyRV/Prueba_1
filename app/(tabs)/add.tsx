@@ -205,7 +205,17 @@ export default function AddScreen() {
           <Controller
             control={control}
             name="name"
-            rules={{ required: 'El nombre es obligatorio' }}
+            rules={{ 
+              required: 'El nombre es obligatorio',
+              pattern: {
+                value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                message: 'El nombre solo puede contener letras y espacios'
+              },
+              validate: {
+                noSoloEspacios: (value) => 
+                  value.trim().length >= 3 || 'El nombre debe tener al menos 3 caracteres reales (no solo espacios)'
+              }
+            }}
             render={({ field: { onChange, onBlur, value } }) => (
               <>
                 <Text className="text-sm font-semibold mb-1 text-gray-700">Nombre del plato</Text>

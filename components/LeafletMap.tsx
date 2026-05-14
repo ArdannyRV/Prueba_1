@@ -6,12 +6,46 @@ interface LeafletMapProps {
   initialLocation?: { lat: number; lng: number };
   readOnly: boolean;
   onLocationSelect?: (latitude: number, longitude: number) => void;
+  dishLocation?: { lat: number; lng: number };
+  userLocation?: { lat: number; lng: number };
 }
 
-function generateMapHtml(lat: number, lng: number, readOnly: boolean): string {
-  const clickHandler = readOnly
-    ? ''
-    : `
+function generateMapHtml(
+  lat: number,
+  lng: number,
+  readOnly: boolean,
+  dishLocation?: { lat: number; lng: number } | null,
+  userLocation?: { lat: number; lng: number } | null,
+): string {
+  const hasRoute = dishLocation != null && userLocation != null;
+
+  let markerScript: string;
+  if (hasRoute) {
+    markerScript = `
+    var dishMarker = L.marker([${dishLocation!.lat}, ${dishLocation!.lng}]).addTo(map);
+    var userMarker = L.circleMarker([${userLocation!.lat}, ${userLocation!.lng}], {
+      radius: 10,
+      fillColor: "#4285F4",
+      color: "#fff",
+      weight: 3,
+      opacity: 1,
+      fillOpacity: 0.9
+    }).addTo(map).bindPopup("Tú estás aquí").openPopup();
+    var polyline = L.polyline([
+      [${userLocation!.lat}, ${userLocation!.lng}],
+      [${dishLocation!.lat}, ${dishLocation!.lng}]
+    ], { color: 'red', weight: 4 }).addTo(map);
+    var distKm = (L.latLng(${userLocation!.lat}, ${userLocation!.lng}).distanceTo(L.latLng(${dishLocation!.lat}, ${dishLocation!.lng})) / 1000).toFixed(2);
+    polyline.bindTooltip(distKm + " km", {
+      permanent: true,
+      direction: 'center',
+      className: 'distance-tooltip'
+    }).openTooltip();
+    map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+    `;
+  } else if (!readOnly) {
+    markerScript = `
+    var marker = L.marker([${lat}, ${lng}], { draggable: true }).addTo(map);
     map.on('click', function(e) {
       marker.setLatLng(e.latlng);
       sendPosition(e.latlng.lat, e.latlng.lng);
@@ -20,7 +54,12 @@ function generateMapHtml(lat: number, lng: number, readOnly: boolean): string {
       var pos = marker.getLatLng();
       sendPosition(pos.lat, pos.lng);
     });
-  `;
+    `;
+  } else {
+    markerScript = `
+    var marker = L.marker([${lat}, ${lng}]).addTo(map);
+    `;
+  }
 
   return `<!DOCTYPE html>
 <html>
@@ -32,6 +71,16 @@ function generateMapHtml(lat: number, lng: number, readOnly: boolean): string {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: 100vw; height: 100vh; overflow: hidden; }
     #map { width: 100%; height: 100%; }
+    .distance-tooltip {
+      background: white !important;
+      font-weight: bold !important;
+      border-radius: 8px !important;
+      padding: 5px 12px !important;
+      font-size: 15px !important;
+      border: 2px solid #E31837 !important;
+      color: #333 !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+    }
   </style>
 </head>
 <body>
@@ -48,11 +97,7 @@ function generateMapHtml(lat: number, lng: number, readOnly: boolean): string {
       maxZoom: 19,
     }).addTo(map);
 
-    var marker = L.marker([${lat}, ${lng}], {
-      draggable: ${!readOnly}
-    }).addTo(map);
-
-    ${clickHandler}
+    ${markerScript}
 
     function sendPosition(lat, lng) {
       if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -64,11 +109,11 @@ function generateMapHtml(lat: number, lng: number, readOnly: boolean): string {
 </html>`;
 }
 
-export default function LeafletMap({ initialLocation, readOnly, onLocationSelect }: LeafletMapProps) {
+export default function LeafletMap({ initialLocation, readOnly, onLocationSelect, dishLocation, userLocation }: LeafletMapProps) {
   const [hasError, setHasError] = useState(false);
-  const lat = initialLocation?.lat ?? 19.4326;
-  const lng = initialLocation?.lng ?? -99.1332;
-  const [html] = useState(() => generateMapHtml(lat, lng, readOnly));
+  const lat = initialLocation?.lat ?? -0.0022;
+  const lng = initialLocation?.lng ?? -78.4459;
+  const [html] = useState(() => generateMapHtml(lat, lng, readOnly, dishLocation, userLocation));
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {

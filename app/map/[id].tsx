@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDishes } from '../../hooks/useDishes';
 import LeafletMap from '../../components/LeafletMap';
@@ -10,11 +12,36 @@ export default function MapScreen() {
   const { session } = useAuth();
   const userId = session?.user?.id;
   const { dishesQuery } = useDishes(userId);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locatingUser, setLocatingUser] = useState(true);
 
-  if (dishesQuery.isLoading) {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        if (!cancelled) setLocatingUser(false);
+        return;
+      }
+      try {
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
+        if (!cancelled) {
+          setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        }
+      } catch {
+        // location failed, proceed without user location
+      } finally {
+        if (!cancelled) setLocatingUser(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (dishesQuery.isLoading || (dishesQuery.data && locatingUser)) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-100">
         <ActivityIndicator size="large" color="#E31837" />
+        <Text className="mt-3 text-gray-600 text-base">Calculando ruta...</Text>
       </View>
     );
   }
@@ -52,6 +79,8 @@ export default function MapScreen() {
       <LeafletMap
         initialLocation={{ lat: dish.latitude, lng: dish.longitude }}
         readOnly={true}
+        dishLocation={{ lat: dish.latitude, lng: dish.longitude }}
+        userLocation={userLocation ? { lat: userLocation.latitude, lng: userLocation.longitude } : undefined}
       />
     </View>
   );
